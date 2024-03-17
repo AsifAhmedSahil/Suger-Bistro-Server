@@ -68,9 +68,23 @@ async function run() {
       })
     };
 
+    // middleware: verify admin after verify token***
+
+    const verifyAdmin = async(req,res,next) =>{
+      const email = req.decoded.email;
+      const query = {email: email}
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+        return res.status(403).send({message: 'forbidden access'})
+
+      }
+      next()
+    }
+
     // User Collection
 
-    app.get("/users", verifyToken, async (req, res) => {
+    app.get("/users", verifyToken,verifyAdmin, async (req, res) => {
       // console.log(req.headers);
       const result = await userCollection.find().toArray();
       res.send(result);
@@ -103,14 +117,14 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/users/:id", async (req, res) => {
+    app.delete("/users/:id",verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.deleteOne(query);
       res.send(result);
     });
 
-    app.patch("/users/admin/:id", async (req, res) => {
+    app.patch("/users/admin/:id",verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
