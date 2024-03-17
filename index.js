@@ -78,9 +78,10 @@ async function run() {
  
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
-      // if (email !== req.decoded.email) {
-      //   return res.status(403).send({ message: "forbidden access" });
-      // }
+      if (email !== req.decoded.email) {
+        console.log("user email and decoded email not same... ")
+        return res.status(403).send({ message: "unauthorized access" });
+      }
 
       const query = { email: email };
       const user = await userCollection.findOne(query);
