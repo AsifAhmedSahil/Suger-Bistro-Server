@@ -37,16 +37,47 @@ async function run() {
       res.send(result);
     });
 
+  
+    app.get("/menu/:id",async(req,res) =>{
+      const id = req.params.id;
+      console.log(id)
+      const query = {_id: new ObjectId(id)};
+      // const query = {_id: id};
+      const result = await menuCollection.findOne(query);
+      console.log("menu id issue",result)
+      res.send(result);
+    })
+    
+
     app.post('/menu',async(req,res) =>{
       const item = req.body;
       const result = await menuCollection.insertOne(item);
       res.send(result);
     })
 
+    app.patch("/menu/:id" ,async(req,res) =>{
+      const item = req.body;
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+          $set:{
+            name: item.name,
+            price: item.price,
+            category: item.category,
+            image:item.image,
+            recipe: item.recipe
+          }
+      }
+
+      const result = await menuCollection.updateOne(filter,updateDoc)
+      res.send(result)
+    })
+
     app.delete("/menu/:id",async(req,res) =>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await menuCollection.deleteOne(query);
+      console.log("deleted id issue",result)
       res.send(result);
     })
 
