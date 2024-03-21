@@ -36,6 +36,39 @@ async function run() {
     const cartCollection = client.db("bistroDB").collection("carts");
     const paymentCollection = client.db("bistroDB").collection("payments");
 
+
+    // Middleware verify token
+
+    const verifyToken = (req, res, next) => {
+      console.log("inside verify token", req.headers.authorization);
+      if(!req.headers.authorization){
+        return res.status(401).send({message: 'forbidden access'})
+      }
+      const token = req.headers.authorization.split(' ')[1]
+      jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded) =>{
+        if(err){
+          return res.status(401).send({message: 'forbidden access'})
+        }
+        req.decoded= decoded;
+        console.log("under verrify Token",res.decoded.email)
+        next()
+      })
+    };
+
+    // middleware: verify admin after verify token***
+
+    const verifyAdmin = async(req,res,next) =>{
+      const email = req.decoded.email;
+      const query = {email: email}
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+        return res.status(403).send({message: 'forbidden access'})
+
+      }
+      next()
+    }
+
     // stripe api
     app.post('/create-payment-intent', async (req, res) => {
       console.log(req.body); // Log the request body to see if 'price' is present
@@ -68,14 +101,18 @@ async function run() {
       res.send({paymentResult,deletedResult});
     })
 
-    app.get('/payments/:id',verifyToken,async(req,res) =>{
-      const query = {email: req.params.email}
-      if(req.params.email !== res.decoded.email){
-        return res.status(403).send({message: 'forbidden access'})
-      }
-      const result = await paymentCollection.find(query).toArray();
-      res.send(result)
+    app.get('/payments/:email',async(req,res) =>{
+      const query = {email: req.params.email};
+      console.log(query);
+      
+      const result = await paymentCollection.find(query).toArray()
+      res.send(result);
     })
+
+    
+
+
+    
 
     // menu related apis
     app.get("/menu", async (req, res) => {
@@ -142,36 +179,7 @@ async function run() {
       res.send({ token });
     });
 
-    // Middleware verify token
-
-    const verifyToken = (req, res, next) => {
-      console.log("inside verify token", req.headers.authorization);
-      if(!req.headers.authorization){
-        return res.status(401).send({message: 'forbidden access'})
-      }
-      const token = req.headers.authorization.split(' ')[1]
-      jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded) =>{
-        if(err){
-          return res.status(401).send({message: 'forbidden access'})
-        }
-        req.decoded= decoded;
-        next()
-      })
-    };
-
-    // middleware: verify admin after verify token***
-
-    const verifyAdmin = async(req,res,next) =>{
-      const email = req.decoded.email;
-      const query = {email: email}
-      const user = await userCollection.findOne(query);
-      const isAdmin = user?.role === 'admin';
-      if(!isAdmin){
-        return res.status(403).send({message: 'forbidden access'})
-
-      }
-      next()
-    }
+    
 
     // User Collection
 
