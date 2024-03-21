@@ -34,6 +34,7 @@ async function run() {
     const menuCollection = client.db("bistroDB").collection("menu");
     const reviewCollection = client.db("bistroDB").collection("reviews");
     const cartCollection = client.db("bistroDB").collection("carts");
+    const paymentCollection = client.db("bistroDB").collection("payments");
 
     // stripe api
     app.post('/create-payment-intent', async (req, res) => {
@@ -53,6 +54,21 @@ async function run() {
       })
     });
     
+
+    app.post('/payment',async(req,res)=>{
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+      const query = {
+        _id: {
+          $in: payment.cartIds.map(id => new ObjectId(id))
+        }
+      };
+      const deletedResult = await cartCollection.deleteMany(query)
+      console.log('payment info',payment)
+      res.send({paymentResult,deletedResult});
+
+      
+    })
 
     // menu related apis
     app.get("/menu", async (req, res) => {
