@@ -2,8 +2,11 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
+
+
 require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
+console.log("stripe api key",process.env.STRIPE_SECRET_KEY)
 const port = 3000 || process.env.PORT;
 
 // Middlewire
@@ -33,19 +36,23 @@ async function run() {
     const cartCollection = client.db("bistroDB").collection("carts");
 
     // stripe api
-    app.post('create-payment-intent',async(req,res) =>{
-      const {price} = req.body;
+    app.post('/create-payment-intent', async (req, res) => {
+      console.log(req.body); // Log the request body to see if 'price' is present
+      const { price } = req.body;
       const amount = parseInt(price * 100);
+      console.log(amount, 'amount inside the intent')
+    
       const paymentIntent = await stripe.paymentIntents.create({
-        amount:amount,
+        amount: amount,
         currency: 'usd',
         payment_method_types: ['card']
-      })
-
+      });
+    
       res.send({
         clientSecret: paymentIntent.client_secret
       })
-    })
+    });
+    
 
     // menu related apis
     app.get("/menu", async (req, res) => {
