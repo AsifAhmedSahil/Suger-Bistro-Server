@@ -66,8 +66,15 @@ async function run() {
       const deletedResult = await cartCollection.deleteMany(query)
       console.log('payment info',payment)
       res.send({paymentResult,deletedResult});
+    })
 
-      
+    app.get('/payments/:id',verifyToken,async(req,res) =>{
+      const query = {email: req.params.email}
+      if(req.params.email !== res.decoded.email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result)
     })
 
     // menu related apis
