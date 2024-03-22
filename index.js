@@ -37,23 +37,42 @@ async function run() {
     const paymentCollection = client.db("bistroDB").collection("payments");
 
 
-    // Middleware verify token
+    // Middleware verify token myself
 
+    // const verifyToken = (req, res, next) => {
+    //   console.log("inside verify token", req.headers.authorization);
+    //   if(!req.headers.authorization){
+    //     return res.status(401).send({message: 'forbidden access'})
+    //   }
+    //   const token = req.headers.authorization.split(' ')[1]
+    //   jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded) =>{
+    //     if(err){
+    //       return res.status(401).send({message: 'forbidden access'})
+    //     }
+    //     req.decoded= decoded;
+    //     console.log("under verrify Token",res.decoded.email)
+    //     next()
+    //   })
+    // };
+
+
+    // verify token chatgpt
     const verifyToken = (req, res, next) => {
       console.log("inside verify token", req.headers.authorization);
-      if(!req.headers.authorization){
-        return res.status(401).send({message: 'forbidden access'})
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: 'forbidden access' });
       }
-      const token = req.headers.authorization.split(' ')[1]
-      jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded) =>{
-        if(err){
-          return res.status(401).send({message: 'forbidden access'})
+      const token = req.headers.authorization.split(' ')[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'forbidden access' });
         }
-        req.decoded= decoded;
-        console.log("under verrify Token",res.decoded.email)
-        next()
-      })
+        req.decoded = decoded;
+        console.log("under verify Token", req.decoded.email); // Change res.decoded.email to req.decoded.email
+        next();
+      });
     };
+    
 
     // middleware: verify admin after verify token***
 
